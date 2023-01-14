@@ -17,15 +17,19 @@ public class DemoSecurityConfig extends WebSecurityConfigurerAdapter {
         User.UserBuilder user = User.withDefaultPasswordEncoder();
         auth.inMemoryAuthentication()
                 .withUser(user.username("John").password("123").roles("EMPLOYEE"))
-                .withUser(user.username("Mary").password("123").roles("MANAGER"))
-                .withUser(user.username("Jane").password("123").roles("ADMIN"));
+                .withUser(user.username("Mary").password("123").roles("EMPLOYEE", "MANAGER"))
+                .withUser(user.username("Jane").password("123").roles("EMPLOYEE", "ADMIN"));
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.authorizeRequests().anyRequest().authenticated()
+        http.authorizeRequests()
+                .antMatchers("/").hasRole("EMPLOYEE")
+                .antMatchers("/leaders/**").hasRole("MANAGER")
+                .antMatchers("/systems/**").hasRole("ADMIN")
                 .and().formLogin().loginPage("/showMyLoginPage")
                 .loginProcessingUrl("/authenticateTheUser").permitAll()
-                .and().logout().permitAll();
+                .and().logout().permitAll()
+                .and().exceptionHandling().accessDeniedPage("/access-denied");
     }
 }
